@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CineHub - Your Movie Guide</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* --- START OF EMBEDDED CSS --- */
+        :root {
+            --primary-dark: #1A202C; /* Dark background */
+            --secondary-light: #F7FAFC; /* Light text/card background */
+            --accent-blue: #4299E1; /* Primary interactive color */
+            --accent-green: #48BB78; /* Success/watchlist color */
+            --text-color: #E2E8F0; /* Light grey text */
+            --card-bg: #2D3748; /* Darker card background */
+            --border-radius-sm: 8px;
+            --border-radius-lg: 12px;
+            --box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--primary-dark);
+            color: var(--text-color);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(to right, #2D3748, #1A202C);
+            color: var(--secondary-light);
+            padding: 40px 20px;
+            text-align: center;
+            box-shadow: var(--box-shadow);
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            margin-bottom: 10px;
+            font-size: 3.5em;
+            letter-spacing: 1px;
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+        }
+
+        header p {
+            font-size: 1.2em;
+            opacity: 0.8;
+        }
+
+        section {
+            padding: 30px;
+            margin-bottom: 30px;
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--box-shadow);
+            text-align: center;
+        }
+
+        h2 {
+            color: var(--accent-blue);
+            font-size: 2.5em;
+            margin-bottom: 25px;
+            position: relative;
+            display: inline-block;
+            padding-bottom: 10px;
+        }
+
+        h2::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: 0;
+            width: 60px;
+            height: 3px;
+            background-color: var(--accent-green);
+            border-radius: 2px;
+        }
+
+        /* --- Movie Search Tool --- */
+        .search-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap; /* Allow wrapping on small screens */
+        }
+
+        .search-container input[type="text"] {
+            padding: 12px 15px;
+            border: 1px solid var(--accent-blue);
+            border-radius: var(--border-radius-sm);
+            background-color: var(--primary-dark);
+            color: var(--text-color);
+            font-size: 1.1em;
+            width: 100%;
+            max-width: 400px;
+            box-sizing: border-box;
+        }
+
+        .search-container button {
+            background-color: var(--accent-blue);
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: var(--border-radius-sm);
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .search-container button:hover {
+            background-color: #3182CE; /* Darker blue */
+            transform: translateY(-2px);
+        }
+
+        #searchResults {
+            margin-top: 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            justify-content: center;
+        }
+
+        .movie-card {
+            background-color: var(--primary-dark);
+            border-radius: var(--border-radius-sm);
+            overflow: hidden;
+            box-shadow: var(--box-shadow);
+            text-align: left;
+            transition: transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .movie-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .movie-card img {
+            width: 100%;
+            height: 350px; /* Fixed height for posters */
+            object-fit: cover;
+            border-bottom: 1px solid var(--card-bg);
+        }
+
+        .movie-card-content {
+            padding: 15px;
+            flex-grow: 1; /* Allows content to expand */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .movie-card h3 {
+            color: var(--accent-blue);
+            font-size: 1.4em;
+            margin-top: 0;
+            margin-bottom: 8px;
+        }
+
+        .movie-card p {
+            font-size: 0.9em;
+            color: var(--text-color);
+            margin-bottom: 15px;
+        }
+
+        .movie-card .actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: auto; /* Push to bottom */
+        }
+
+        .movie-card .rating {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: var(--accent-green);
+        }
+
+        /* --- Add to Watchlist Button --- */
+        .watchlist-btn {
+            background-color: #6B7280; /* Grey */
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: var(--border-radius-sm);
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .watchlist-btn i {
+            margin-right: 5px;
+        }
+
+        .watchlist-btn.added {
+            background-color: var(--accent-green);
+        }
+
+        .watchlist-btn:hover:not(.added) {
+            background-color: #4A5568; /* Darker grey */
+        }
+
+        /* --- Movie Carousel Tool --- */
+        .movie-carousel {
+            position: relative;
+            width: 100%;
+            overflow: hidden;
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--box-shadow);
+            margin-top: 30px;
+            height: 450px; /* Taller for movie posters */
+            display: flex; /* Ensure inner content is flexed */
+            align-items: center; /* Vertically center content if needed */
+        }
+        .carousel-inner {
+            display: flex;
+            transition: transform 0.5s ease-in-out;
+            height: 100%;
+        }
+        .carousel-item {
+            min-width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end; /* Align content to bottom */
+            color: white;
+            text-shadow: 2px 2px 6px rgba(0,0,0,0.8);
+            font-size: 1.8em;
+            padding-bottom: 30px;
+            text-align: center;
+            position: relative;
+        }
+        .carousel-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 50%); /* Gradient overlay */
+            z-index: 1;
+        }
+        .carousel-item .content {
+            position: relative;
+            z-index: 2;
+            max-width: 80%;
+        }
+        .carousel-item h3 {
+            font-size: 1.5em;
+            margin-bottom: 5px;
+            color: white;
+        }
+        .carousel-item p {
+            font-size: 0.7em;
+            margin: 0;
+            opacity: 0.9;
+        }
+
+        .carousel-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(0,0,0,0.6);
+            color: white;
+            border: none;
+            padding: 15px 10px;
+            cursor: pointer;
+            font-size: 1.5em;
+            z-index: 10;
+            border-radius: var(--border-radius-sm);
+            transition: background-color 0.3s ease;
+        }
+        .carousel-btn:hover {
+            background-color: rgba(0,0,0,0.8);
+        }
+        .carousel-btn.prev { left: 15px; }
+        .carousel-btn.next { right: 15px; }
+
+
+        footer {
+            text-align: center;
+            padding: 30px;
+            background-color: var(--primary-dark);
+            color: var(--text-color);
+            margin-top: 40px;
+            font-size: 0.9em;
+            border-top: 1px solid var(--card-bg);
+        }
+
+        /* Media Queries for Responsiveness */
+        @media (max-width: 768px) {
+            header h1 { font-size: 2.8em; }
+            header p { font-size: 1em; }
+            h2 { font-size: 2em; margin-bottom: 20px; }
+            section { padding: 20px; margin-bottom: 20px; }
+            .search-container input, .search-container button { font-size: 1em; padding: 10px 15px; }
+            #searchResults { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; }
+            .movie-card img { height: 280px; }
+            .movie-card h3 { font-size: 1.2em; }
+            .movie-card p { font-size: 0.85em; }
+            .watchlist-btn { font-size: 0.8em; padding: 6px 10px; }
+            .movie-carousel { height: 350px; }
+            .carousel-item { font-size: 1.4em; padding-bottom: 20px; }
+            .carousel-item h3 { font-size: 1.2em; }
+            .carousel-item p { font-size: 0.6em; }
+            .carousel-btn { font-size: 1.2em; padding: 10px 8px; }
+        }
+
+        @media (max-width: 480px) {
+            header h1 { font-size: 2.2em; }
+            header p { font-size: 0.9em; }
+            h2 { font-size: 1.8em; }
+            .container { padding: 10px; }
+            .search-container { flex-direction: column; align-items: center; }
+            .search-container input { max-width: 90%; }
+            #searchResults { grid-template-columns: 1fr; } /* Single column on very small screens */
+            .movie-card img { height: 300px; } /* Slightly taller for single column */
+            .movie-carousel { height: 300px; }
+            .carousel-item { font-size: 1.1em; padding-bottom: 15px; }
+            .carousel-item h3 { font-size: 1em; }
+            .carousel-item p { display: none; } /* Hide description on very small screens */
+            .carousel-btn { padding: 8px 6px; }
+        }
+        /* --- END OF EMBEDDED CSS --- */
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>CineHub</h1>
+        <p>Your Ultimate Guide to Movies</p>
+    </header>
+
+    <div class="container">
+
+        <section id="movie-search">
+            <h2>Find Your Next Movie</h2>
+            <div class="search-container">
+                <input type="text" id="movieSearchInput" placeholder="Search for a movie title...">
+                <button id="searchMovieBtn"><i class="fas fa-search"></i> Search</button>
+            </div>
+            <div id="searchResults">
+                </div>
+        </section>
+
+        <section id="featured-carousel">
+            <h2>Trending Now</h2>
+            <div class="movie-carousel">
+                <div class="carousel-inner" id="movieCarouselInner">
+                    <div class="carousel-item" style="background-image: url('https://placehold.co/800x450/4299E1/2D3748?text=Action+Movie+Poster')">
+                        <div class="content">
+                            <h3>The Galactic Saga</h3>
+                            <p>An epic space opera spanning galaxies.</p>
+                        </div>
+                    </div>
+                    <div class="carousel-item" style="background-image: url('https://placehold.co/800x450/48BB78/2D3748?text=Comedy+Movie+Poster')">
+                        <div class="content">
+                            <h3>Laugh Out Loud</h3>
+                            <p>A hilarious comedy that will brighten your day.</p>
+                        </div>
+                    </div>
+                    <div class="carousel-item" style="background-image: url('https://placehold.co/800x450/F56565/2D3748?text=Thriller+Movie+Poster')">
+                        <div class="content">
+                            <h3>Silent Whispers</h3>
+                            <p>A chilling thriller with unexpected twists.</p>
+                        </div>
+                    </div>
+                    <div class="carousel-item" style="background-image: url('https://placehold.co/800x450/ECC94B/2D3748?text=Drama+Movie+Poster')">
+                        <div class="content">
+                            <h3>Life's Tapestry</h3>
+                            <p>A poignant drama about human connections.</p>
+                        </div>
+                    </div>
+                </div>
+                <button class="carousel-btn prev" id="carouselPrevBtn"><i class="fas fa-chevron-left"></i></button>
+                <button class="carousel-btn next" id="carouselNextBtn"><i class="fas fa-chevron-right"></i></button>
+            </div>
+        </section>
+
+        <section id="popular-movies">
+            <h2>Popular Movies</h2>
+            <div id="popularMoviesList" class="movie-grid">
+                </div>
+        </section>
+
+    </div>
+
+    <footer>
+        <p>&copy; 2025 CineHub. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+        /* --- START OF EMBEDDED JAVASCRIPT --- */
+
+        // Sample movie data (simulating a backend API)
+        const allMovies = [
+            { id: 'M001', title: 'The Galactic Saga', genre: 'Sci-Fi', year: 2023, rating: 4.5, description: 'An epic space opera spanning galaxies.', poster: 'https://placehold.co/300x450/4299E1/2D3748?text=Galactic+Saga' },
+            { id: 'M002', title: 'Laugh Out Loud', genre: 'Comedy', year: 2022, rating: 4.0, description: 'A hilarious comedy that will brighten your day.', poster: 'https://placehold.co/300x450/48BB78/2D3748?text=Laugh+Out+Loud' },
+            { id: 'M003', title: 'Silent Whispers', genre: 'Thriller', year: 2024, rating: 4.8, description: 'A chilling thriller with unexpected twists.', poster: 'https://placehold.co/300x450/F56565/2D3748?text=Silent+Whispers' },
+            { id: 'M004', title: 'Life\'s Tapestry', genre: 'Drama', year: 2021, rating: 4.2, description: 'A poignant drama about human connections.', poster: 'https://placehold.co/300x450/ECC94B/2D3748?text=Life\'s+Tapestry' },
+            { id: 'M005', title: 'Code Breakers', genre: 'Action', year: 2023, rating: 4.1, description: 'High-stakes espionage and thrilling action.', poster: 'https://placehold.co/300x450/667EEA/2D3748?text=Code+Breakers' },
+            { id: 'M006', title: 'Mystic Forest', genre: 'Fantasy', year: 2020, rating: 3.9, description: 'Journey into an enchanted world of magic.', poster: 'https://placehold.co/300x450/9F7AEA/2D3748?text=Mystic+Forest' },
+            { id: 'M007', title: 'Future City', genre: 'Sci-Fi', year: 2024, rating: 4.6, description: 'A dystopian future where technology rules all.', poster: 'https://placehold.co/300x450/ED8936/2D3748?text=Future+City' },
+            { id: 'M008', title: 'The Great Escape', genre: 'Adventure', year: 2019, rating: 3.8, description: 'A daring escape from an inescapable prison.', poster: 'https://placehold.co/300x450/4FD1C5/2D3748?text=Great+Escape' }
+        ];
+
+        let watchlist = []; // In-memory watchlist for demonstration
+
+        // Helper function to render a single movie card
+        function renderMovieCard(movie) {
+            const movieCard = document.createElement('div');
+            movieCard.classList.add('movie-card');
+            movieCard.dataset.movieId = movie.id; // Store movie ID for watchlist
+
+            const isAddedToWatchlist = watchlist.includes(movie.id);
+            const watchlistBtnClass = isAddedToWatchlist ? 'watchlist-btn added' : 'watchlist-btn';
+            const watchlistBtnText = isAddedToWatchlist ? 'Added to Watchlist' : 'Add to Watchlist';
+            const watchlistBtnIcon = isAddedToWatchlist ? 'fas fa-check' : 'fas fa-plus';
+
+            movieCard.innerHTML = `
+                <img src="${movie.poster}" alt="${movie.title} Poster" onerror="this.onerror=null;this.src='https://placehold.co/300x450/6B7280/F7FAFC?text=No+Image';">
+                <div class="movie-card-content">
+                    <div>
+                        <h3>${movie.title} (${movie.year})</h3>
+                        <p>${movie.description}</p>
+                    </div>
+                    <div class="actions">
+                        <span class="rating"><i class="fas fa-star"></i> ${movie.rating}</span>
+                        <button class="${watchlistBtnClass}" data-movie-id="${movie.id}">
+                            <i class="${watchlistBtnIcon}"></i> ${watchlistBtnText}
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            // Add event listener for the watchlist button
+            const btn = movieCard.querySelector('.watchlist-btn');
+            btn.addEventListener('click', (event) => {
+                const movieId = event.currentTarget.dataset.movieId;
+                toggleWatchlist(movieId, event.currentTarget);
+            });
+
+            return movieCard;
+        }
+
+        // --- Tool 1: Movie Search with Dynamic Display ---
+        const movieSearchInput = document.getElementById('movieSearchInput');
+        const searchMovieBtn = document.getElementById('searchMovieBtn');
+        const searchResultsContainer = document.getElementById('searchResults');
+        const popularMoviesList = document.getElementById('popularMoviesList');
+
+        function displayMovies(movies, container) {
+            container.innerHTML = ''; // Clear previous results
+            if (movies.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--text-color);">No movies found matching your criteria.</p>';
+                return;
+            }
+            movies.forEach(movie => {
+                container.appendChild(renderMovieCard(movie));
+            });
+        }
+
+        searchMovieBtn.addEventListener('click', () => {
+            const searchTerm = movieSearchInput.value.toLowerCase().trim();
+            if (searchTerm === '') {
+                searchResultsContainer.innerHTML = '<p style="text-align: center; color: var(--text-color);">Please enter a movie title to search.</p>';
+                return;
+            }
+            const filteredMovies = allMovies.filter(movie =>
+                movie.title.toLowerCase().includes(searchTerm) ||
+                movie.description.toLowerCase().includes(searchTerm) ||
+                movie.genre.toLowerCase().includes(searchTerm)
+            );
+            displayMovies(filteredMovies, searchResultsContainer);
+        });
+
+        // Load some initial popular movies
+        displayMovies(allMovies.slice(0, 4), popularMoviesList); // Display first 4 as popular
+
+        // --- Tool 2: Interactive Movie Carousel ---
+        const movieCarouselInner = document.getElementById('movieCarouselInner');
+        const carouselPrevBtn = document.getElementById('carouselPrevBtn');
+        const carouselNextBtn = document.getElementById('carouselNextBtn');
+        const carouselItems = document.querySelectorAll('#movieCarouselInner .carousel-item');
+
+        let carouselCurrentIndex = 0;
+        const carouselTotalItems = carouselItems.length;
+
+        function updateMovieCarousel() {
+            const offset = -carouselCurrentIndex * 100;
+            movieCarouselInner.style.transform = `translateX(${offset}%)`;
+        }
+
+        carouselPrevBtn.addEventListener('click', () => {
+            carouselCurrentIndex = (carouselCurrentIndex > 0) ? carouselCurrentIndex - 1 : carouselTotalItems - 1;
+            updateMovieCarousel();
+        });
+
+        carouselNextBtn.addEventListener('click', () => {
+            carouselCurrentIndex = (carouselCurrentIndex < carouselTotalItems - 1) ? carouselCurrentIndex + 1 : 0;
+            updateMovieCarousel();
+        });
+
+        let movieAutoSlideInterval = setInterval(() => {
+            carouselCurrentIndex = (carouselCurrentIndex < carouselTotalItems - 1) ? carouselCurrentIndex + 1 : 0;
+            updateMovieCarousel();
+        }, 5000); // Auto-slide every 5 seconds
+
+        // Pause auto-slide on hover
+        const movieCarouselSection = document.querySelector('.movie-carousel');
+        movieCarouselSection.addEventListener('mouseenter', () => clearInterval(movieAutoSlideInterval));
+        movieCarouselSection.addEventListener('mouseleave', () => {
+            movieAutoSlideInterval = setInterval(() => {
+                carouselCurrentIndex = (carouselCurrentIndex < carouselTotalItems - 1) ? carouselCurrentIndex + 1 : 0;
+                updateMovieCarousel();
+            }, 5000);
+        });
+
+        // --- Tool 3: Add to Watchlist Button ---
+        function toggleWatchlist(movieId, buttonElement) {
+            const index = watchlist.indexOf(movieId);
+            if (index > -1) {
+                // Movie is in watchlist, remove it
+                watchlist.splice(index, 1);
+                buttonElement.classList.remove('added');
+                buttonElement.innerHTML = '<i class="fas fa-plus"></i> Add to Watchlist';
+                console.log(`Removed ${movieId} from watchlist. Current watchlist:`, watchlist);
+            } else {
+                // Movie is not in watchlist, add it
+                watchlist.push(movieId);
+                buttonElement.classList.add('added');
+                buttonElement.innerHTML = '<i class="fas fa-check"></i> Added to Watchlist';
+                console.log(`Added ${movieId} to watchlist. Current watchlist:`, watchlist);
+            }
+            // In a real app, you'd persist this to local storage or a backend
+        }
+
+        /* --- END OF EMBEDDED JAVASCRIPT --- */
+    </script>
+</body>
+</html>
